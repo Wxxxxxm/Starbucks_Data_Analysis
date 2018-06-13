@@ -1,15 +1,27 @@
 # -*- coding:UTF-8 -*-#
 from DataAnalysis import *
-from miniheap2 import *
-
+from mainwindowUI import *
+from urllib import *
 if __name__ == "__main__":
 
-    starbucks_df = read_data()
-    print(starbucks_df.columns)
+    app = QtWidgets.QApplication(sys.argv)
+    # widget = QtWidgets.QWidget()
+    # MainWindow = QMainWindow()
+    # ui = Ui_MainWindow()
+    # ui.setupUi(MainWindow)
+    MainWindow = Ui_MainWindow()
+    # url = "https://www.baidu.com"
+    # MainWindow.load1()
+
+    # MainWindow.menu()
+    # QWebView.load(MainWindow,url)
+
+    """starbucks_df = read_data()
+    starbucks_df_time = time_preprocessing(starbucks_df)
     # 转为json文件
 
-    starbucks_json_file = "starbucks.geojson"
-    create_geojson(starbucks_df, starbucks_json_file)
+    # starbucks_json_file = "starbucks.geojson"
+    # create_geojson(starbucks_df, starbucks_json_file)
     # 设置geo信息
     starbucks_world_geo = r'D:\\file\world.json'
 
@@ -28,12 +40,12 @@ if __name__ == "__main__":
 
     # 所有星巴克分布地图
     starbucks_category_color_stops = [['Starbucks', 'rgb(211,47,47)'], ]
-    draw_map(starbucks_json_file, starbucks_category_color_stops, 'Brand', r'D:\\file\starbucks\fenbutu.html')
+    draw_map(starbucks_df, r'D:\\file\starbucks\fenbutu.html')
 
     # 时区数量统计
-    df_time = group(starbucks_df, 'Time')
-    df_time_index = count_by_group(df_time,True)
-    df_time_index_ase = count_by_group(df_time,False)
+    df_time = group(starbucks_df_time, 'Time')
+    df_time_index = count_by_group(df_time, True)
+    df_time_index_ase = count_by_group(df_time, False)
     # 时区数量统计柱状图
     bar_time = Bar("各时区内店铺数量统计")
     bar_pic(bar_time, df_time_index, 'Time', 'count','升序')
@@ -44,9 +56,9 @@ if __name__ == "__main__":
     pie_time.render(r'D:\\file\starbucks\Amout_in_Each_Timezone_Pie.html')
 
     # 时区内小时区的数量统计
-    df_gp = group(starbucks_df, ['Time', 'Timezone'])
+    df_gp = group(starbucks_df_time, ['Time', 'Timezone'])
     df_gp.columns = ['count']
-    df_index = group(starbucks_df, ['Time'])
+    df_index = group(starbucks_df_time, ['Time'])
     df_index = df_index.reset_index(drop=False)
     timeline = Timeline(is_auto_play=False, timeline_bottom=0)
     for i in range(df_index.shape[0]):
@@ -60,26 +72,29 @@ if __name__ == "__main__":
         timeline.add(pie, 'Amount of Starbucks in ' + string)
     timeline.render(r'D:\\file\starbucks\Amount_of_Country_in_Timezone_Pie.html')
 
+
     # 按时区的所有星巴克分布地图
     starbucks_category_color_time = []
-    for index, value in enumerate(df_time_index_ase['Time']):
-        i = 255
-        j = 10*index
-        k = 0
-        starbucks_category_color_time.append([df_time_index_ase['Time'][index], 'rgb(%s,%s,%s)' % (i, j, k)])
-    draw_map(starbucks_json_file, starbucks_category_color_time, 'Time',  r'D:\\file\starbucks\map_time.html')
+    timezone_amount = []
+    # for index, value in enumerate(df_time_index['Time']):
+    #     i = 10*index
+    #    timezone_amount.append(i)
+    #df_time_index.insert(0, 'amount',timezone_amount)
+    print(starbucks_df_time)
+    for index in range(starbucks_df_time.shape[0]):
+        i = df_time_index['count'][df_time_index.Time == starbucks_df_time['Time'][index]]
+        timezone_amount.append(i)
+    starbucks_df_time.insert(0, 'timezone_amount', timezone_amount)
+    print(starbucks_df_time)
+    #    starbucks_category_color_time.append([df_time_index_ase['Time'][index], 'rgb(%s,%s,%s)' % (i, j, k)])
+    draw_timezone_map(starbucks_df_time, r'D:\\file\starbucks\map_time.html')
 
     # 渐变图
-    draw_distribution_map(starbucks_world_geo,df_con_index,'Country','distribution_map_country.html')
+    draw_distribution_map(starbucks_world_geo,df_con_index,'Country', 'distribution_map_country.html')"""
     # draw_distribution_map(starbucks_world_geo,df_time_index,'Time','distribution_map_time.html')
 
-    # topk问题
-    # start = time.time()
-    df_topk = top_k(starbucks_df,1.53, 42.51,100)
 
-    topk_json = "topk.geojson"
-    create_geojson(df_topk, topk_json)
-    draw_map(topk_json,starbucks_category_color_stops,'Brand', r'D:\\file\starbucks\topk.html')
+    MainWindow.setupUi(MainWindow)
+    MainWindow.show()
 
-    # end = time.time()
-    # print('run time: '+ + 'seconds')
+    sys.exit(app.exec_())

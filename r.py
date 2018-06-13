@@ -3,8 +3,8 @@
 from DataAnalysis import *
 from math import sin, asin, cos, radians, fabs, sqrt
 from Geohash import encode
-from PyQt5.QtWidgets import QApplication, QWidget, QProgressBar, QPushButton
-from PyQt5.QtCore import QBasicTimer
+from pandas import *
+
 
 EARTH_RADIUS = 6371
 
@@ -81,7 +81,7 @@ def find_largest(df1, lon, lat, r):
         df1.insert(0, 'distance', dis)
         print(df1)
         # df1.set_index('distance', inplace=True, drop=True)
-        arr = np.array(dis)
+        arr = numpy.array(dis)
         # print(arr)
         arr = top_heap_sort(arr)
         # print(arr)
@@ -90,9 +90,6 @@ def find_largest(df1, lon, lat, r):
 
 
 def r_cal(df, lon, lat, r):
-
-
-
     h_goal = encode(lat, lon, 4)
     # 筛选h4属性为h_goal[0:4]的行组成dataframe
     df1 = df[df.h4 == h_goal[0:4]]
@@ -145,28 +142,3 @@ def r_analysis(df, lon, lat):
     })
     return r_analyze
 
-
-if __name__ == "__main__":
-    starbucks_df = read_data()
-    h4 = []
-    h3 = []
-    h2 = []
-    h1 = []
-    for index in range(starbucks_df.shape[0]):
-        h = encode(starbucks_df['lat'][index], starbucks_df['lon'][index], 4)
-        h4.append(h)
-        h3.append(h[0:3])
-        h2.append(h[0:2])
-        h1.append(h[0])
-    starbucks_df.insert(0, 'h4', h4)
-    starbucks_df.insert(0, 'h3', h3)
-    starbucks_df.insert(0, 'h2', h2)
-    starbucks_df.insert(0, 'h1', h1)
-    # starbucks_df.set_index('h3', inplace=True, drop=True)
-    # print(starbucks_df)
-    dfr = r_cal(starbucks_df, 113.31, 22.15, 80)
-    print(dfr)
-    # df_analysis = r_analysis(starbucks_df, 113.31, 22.15)
-    # bar = Bar("R Time Analysis")
-    # bar = bar_pic(bar, df_analysis, 'r', 'time', 'Analysis Bar')
-    # bar.render('D:\\file\starbucks\R_Analysis.html')
