@@ -7,33 +7,121 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWebKitWidgets import QWebView
-from DataAnalysis import *
+from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
 from similarity import *
+from DataAnalysis import *
 from r import *
 from score import *
 from k import *
+from top import *
 import time
-from urllib import *
-from pandas import DataFrame
+from urllib.request import *
+from PyQt5.QtWidgets import QMainWindow
+from pyecharts import Bar
 
-class Ui_MainWindow(QtWidgets.QMainWindow):
+class Ui_MainWindow(QMainWindow):
 
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
+    def setupUi(self,MainWindow):
+        self.setWindowIcon(QtGui.QIcon('starbucks_icon.jpg'))
+        self.menubar = QtWidgets.QMenuBar(self)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 23))
+        self.menubar.setObjectName("menubar")
+        self.menu = QtWidgets.QMenu(self.menubar)
+        self.menu.setObjectName("menu")
+        self.menu_2 = QtWidgets.QMenu(self.menubar)
+        self.menu_2.setObjectName("menu_2")
+        self.menu_3 = QtWidgets.QMenu(self.menubar)
+        self.menu_3.setObjectName("menu_3")
+        self.setMenuBar(self.menubar)
 
-        vbox = QGridLayout()
+        self.shiqu = QtWidgets.QAction(self)
+        self.shiqu.setObjectName("shiqu")
 
-        self.topk = QtWidgets.QWidget(self.centralwidget)
-        self.topk.setGeometry(QtCore.QRect(0, 0, 721, 41))
+        self.shiquerji = QtWidgets.QAction(self)
+        self.shiquerji.setObjectName("shiquerji")
+
+        self.zhuzhuang = QtWidgets.QAction(self)
+        self.zhuzhuang.setObjectName("zhuzhuang")
+
+        self.bingtu = QtWidgets.QAction(self)
+        self.bingtu.setObjectName("bingtu")
+
+        self.fenbu = QtWidgets.QAction(self)
+        self.fenbu.setObjectName("fenbu")
+
+        self.shiqufenbu = QtWidgets.QAction(self)
+        self.shiqufenbu.setObjectName("shiqufenbu")
+
+        self.guojiajianbian = QtWidgets.QAction(self)
+        self.guojiajianbian.setObjectName("guojiajianbian")
+
+        self.menu.addAction(self.shiqu)
+        self.menu.addAction(self.shiquerji)
+        self.menu_2.addAction(self.zhuzhuang)
+        self.menu_2.addAction(self.bingtu)
+        self.menu_3.addAction(self.fenbu)
+        self.menu_3.addAction(self.shiqufenbu)
+        self.menu_3.addAction(self.guojiajianbian)
+        self.menubar.addAction(self.menu.menuAction())
+        self.menubar.addAction(self.menu_2.menuAction())
+        self.menubar.addAction(self.menu_3.menuAction())
+
+        self.listWidget = QtWidgets.QListWidget()
+        self.listWidget.setFixedSize(200, 500)
+        self.listWidget.setObjectName("listView")
+        self.listWidget.close()
+
+        self.set_topk()
+        self.set_topr()
+        self.set_score()
+        self.set_webwindow()
+
+        vbox = QtWidgets.QGridLayout()
+        self.two = QtWidgets.QWidget()
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(self.topk)
+        hbox.addWidget(self.topr)
+        hbox.addWidget(self.score)
+        self.two.setLayout(hbox)
+
+        self.three = QtWidgets.QWidget()
+        hbox_three = QtWidgets.QHBoxLayout()
+        hbox_three.addWidget(self.web)
+        hbox_three.addWidget(self.listWidget)
+        self.listWidget.close()
+        self.three.setLayout(hbox_three)
+
+        vbox.addWidget(self.two)
+        vbox.addWidget(self.three)
+        self.main = QtWidgets.QWidget()
+        self.resize(1600, 700)
+        self.main.setLayout(vbox)
+        self.setCentralWidget(self.main)
+
+        self.retranslateUi(MainWindow)
+        self.search_k.clicked.connect(self.search_kfun)
+        self.shiqu.triggered.connect(self.shiqufun)
+        self.shiquerji.triggered.connect(self.shiquerjifun)
+        self.zhuzhuang.triggered.connect(self.zhuzhuangfun)
+        self.bingtu.triggered.connect(self.bingtufun)
+        self.guojiajianbian.triggered.connect(self.guojiajianbianfun)
+        self.fenbu.triggered.connect(self.fenbufun)
+        self.shiqufenbu.triggered.connect(self.shiqufenbufun)
+        self.time_analysis.clicked.connect(self.time_analysisfun)
+        self.search_r.clicked.connect(self.search_rfun)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        MainWindow.show()
+        self.listWidget.close()
+
+    def set_topk(self):
+        self.topk = QtWidgets.QGroupBox("关键词检索")
         self.topk.setObjectName("topk")
+        hbox = QtWidgets.QHBoxLayout()
 
         self.key = QtWidgets.QComboBox(self.topk)
-        self.key.setGeometry(QtCore.QRect(90, 10, 81, 22))
         self.key.setObjectName("key")
+
 
         self.key.addItem("")
         self.key.addItem("Brand")
@@ -52,215 +140,136 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.key.activated[str].connect(self.keyword_onActivated)
 
         self.keyword = QtWidgets.QLineEdit(self.topk)
-        self.keyword.setGeometry(QtCore.QRect(180, 10, 71, 20))
         self.keyword.setObjectName("keyword")
+        self.keyword.setFixedWidth(60)
 
-        self.label_3 = QtWidgets.QLabel(self.topk)
-        self.label_3.setGeometry(QtCore.QRect(430, 10, 71, 20))
-        self.label_3.setObjectName("label_3")
+        self.label_k = QtWidgets.QLabel(self.topk)
+        self.label_k.setObjectName("label_k")
 
         self.input_k = QtWidgets.QLineEdit(self.topk)
-        self.input_k.setGeometry(QtCore.QRect(500, 10, 31, 20))
         self.input_k.setObjectName("input_k")
 
-        self.label = QtWidgets.QLabel(self.topk)
-        self.label.setGeometry(QtCore.QRect(260, 10, 31, 16))
-        self.label.setObjectName("label")
-        self.label_2 = QtWidgets.QLabel(self.topk)
-        self.label_2.setGeometry(QtCore.QRect(350, 10, 31, 16))
-        self.label_2.setObjectName("label_2")
+        self.label_lonk = QtWidgets.QLabel(self.topk)
+        self.label_lonk.setObjectName("label")
+        self.label_latk = QtWidgets.QLabel(self.topk)
+        self.label_latk.setObjectName("label_latk")
 
         self.search_k = QtWidgets.QPushButton(self.topk)
-        self.search_k.setGeometry(QtCore.QRect(540, 10, 75, 23))
         self.search_k.setObjectName("search_k")
+        self.search_k.setFixedWidth(60)
 
         self.input_lat = QtWidgets.QLineEdit(self.topk)
-        self.input_lat.setGeometry(QtCore.QRect(380, 10, 41, 20))
         self.input_lat.setObjectName("input_lat")
+        self.input_lat.setFixedWidth(50)
 
         self.input_lon = QtWidgets.QLineEdit(self.topk)
-        self.input_lon.setGeometry(QtCore.QRect(290, 10, 51, 20))
         self.input_lon.setObjectName("input_lon")
-
-        self.label_9 = QtWidgets.QLabel(self.topk)
-        self.label_9.setGeometry(QtCore.QRect(13, 12, 71, 21))
-        font = QtGui.QFont()
-        font.setFamily("Agency FB")
-        font.setPointSize(10)
-        self.label_9.setFont(font)
-        self.label_9.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.label_9.setObjectName("label_9")
+        self.input_lon.setFixedWidth(50)
 
         self.time_analysis = QtWidgets.QPushButton(self.topk)
-        self.time_analysis.setGeometry(QtCore.QRect(630, 10, 81, 21))
         self.time_analysis.setObjectName("time_analysis")
+        self.time_analysis.setFixedWidth(100)
 
-        self.topr = QtWidgets.QWidget(self.centralwidget)
-        self.topr.setGeometry(QtCore.QRect(0, 40, 971, 41))
+        hbox.addWidget(self.key)
+        hbox.addWidget(self.keyword)
+        hbox.addWidget(self.label_lonk)
+        hbox.addWidget(self.input_lon)
+        hbox.addWidget(self.label_latk)
+        hbox.addWidget(self.input_lat)
+        hbox.addWidget(self.label_k)
+        hbox.addWidget(self.input_k)
+        hbox.addWidget(self.search_k)
+        hbox.addWidget(self.time_analysis)
+        self.topk.setLayout(hbox)
+
+    def set_topr(self):
+        hbox_r = QtWidgets.QHBoxLayout()
+
+        self.topr = QtWidgets.QGroupBox("距离范围检索")
         self.topr.setObjectName("topr")
 
-        self.webwindow = QWebView(self.centralwidget)
-        self.webwindow.setGeometry(QtCore.QRect(-1, 79, 1200, 800))
-        self.webwindow.setAutoFillBackground(True)
-        self.webwindow.setObjectName("webwindow")
-
-        self.label_11 = QtWidgets.QLabel(self.topr)
-        self.label_11.setGeometry(QtCore.QRect(100, 10, 31, 16))
-        self.label_11.setObjectName("label_11")
-        self.label_12 = QtWidgets.QLabel(self.topr)
-        self.label_12.setGeometry(QtCore.QRect(210, 10, 31, 16))
-        self.label_12.setObjectName("label_12")
+        self.label_lonr = QtWidgets.QLabel(self.topr)
+        self.label_lonr.setObjectName("lonr")
+        self.label_latr = QtWidgets.QLabel(self.topr)
+        self.label_latr.setObjectName("label_latr")
 
         self.search_r = QtWidgets.QPushButton(self.topr)
-        self.search_r.setGeometry(QtCore.QRect(530, 10, 75, 23))
         self.search_r.setObjectName("search_r")
 
         self.input_lat_r = QtWidgets.QLineEdit(self.topr)
-        self.input_lat_r.setGeometry(QtCore.QRect(240, 10, 71, 20))
         self.input_lat_r.setObjectName("input_lat_r")
+        self.input_lat_r.setFixedWidth(50)
 
         self.input_lon_r = QtWidgets.QLineEdit(self.topr)
-        self.input_lon_r.setGeometry(QtCore.QRect(130, 10, 71, 20))
         self.input_lon_r.setObjectName("input_lon_r")
-
-        self.label_13 = QtWidgets.QLabel(self.topr)
-        self.label_13.setGeometry(QtCore.QRect(320, 10, 101, 20))
-        self.label_13.setObjectName("label_13")
+        self.input_lon_r.setFixedWidth(50)
 
         self.input_r = QtWidgets.QLineEdit(self.topr)
-        self.input_r.setGeometry(QtCore.QRect(430, 10, 81, 20))
         self.input_r.setObjectName("input_r")
 
-        self.label_14 = QtWidgets.QLabel(self.topr)
-        self.label_14.setGeometry(QtCore.QRect(13, 10, 81, 20))
-        font = QtGui.QFont()
-        font.setFamily("Agency FB")
-        font.setPointSize(10)
-        self.label_14.setFont(font)
-        self.label_14.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.label_14.setObjectName("label_14")
+        self.rsearch = QtWidgets.QLabel(self.topr)
 
-        self.label_15 = QtWidgets.QLabel(self.topr)
-        self.label_15.setGeometry(QtCore.QRect(630, 10, 84, 20))
-        self.label_15.setObjectName("label_15")
-        MainWindow.setCentralWidget(self.centralwidget)
+        self.rsearch.setObjectName("rsearch")
 
-        self.input_score = QtWidgets.QLineEdit(self.topr)
-        self.input_score.setGeometry(QtCore.QRect(720, 10, 91, 20))
-        self.input_score.setObjectName("input_score")
-        self.input_score.setEnabled(False)
+        hbox_r.addWidget(self.label_lonr)
+        hbox_r.addWidget(self.input_lon_r)
+        hbox_r.addWidget(self.label_latr)
+        hbox_r.addWidget(self.input_lat_r)
+        hbox_r.addWidget(self.rsearch)
+        hbox_r.addWidget(self.input_r)
+        hbox_r.addWidget(self.search_r)
 
-        self.in_score = QtWidgets.QPushButton(self.topr)
-        self.in_score.setGeometry(QtCore.QRect(820, 10, 75, 20))
+        self.topr.setLayout(hbox_r)
+
+    def set_score(self):
+        hbox_s = QtWidgets.QHBoxLayout()
+
+        self.score = QtWidgets.QGroupBox("评分")
+        self.score.setObjectName("score")
+
+        self.label_score = QtWidgets.QLabel(self.score)
+        self.label_score.setObjectName("label_score")
+
+        self.countSpineBox = QtWidgets.QSpinBox()
+        self.countSpineBox.setRange(0, 10)
+        self.countSpineBox.setEnabled(False)
+
+        self.in_score = QtWidgets.QPushButton(self.score)
         self.in_score.setObjectName("in_score")
         self.in_score.setEnabled(False)
 
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 23))
-        self.menubar.setObjectName("menubar")
-        self.menu = QtWidgets.QMenu(self.menubar)
-        self.menu.setObjectName("menu")
-        self.menu_2 = QtWidgets.QMenu(self.menubar)
-        self.menu_2.setObjectName("menu_2")
-        self.menu_3 = QtWidgets.QMenu(self.menubar)
-        self.menu_3.setObjectName("menu_3")
-        MainWindow.setMenuBar(self.menubar)
+        hbox_s.addWidget(self.label_score)
+        hbox_s.addWidget(self.countSpineBox)
+        hbox_s.addWidget(self.in_score)
+        self.score.setLayout(hbox_s)
 
+    def set_webwindow(self):
+        self.web = QtWidgets.QGroupBox("显示结果")
+        hbox_web = QtWidgets.QHBoxLayout()
+        self.webwindow = QWebEngineView()
+        self.webwindow.setAutoFillBackground(True)
+        self.webwindow.setObjectName("webwindow")
 
-        # self.setGeometry(300, 300, 250, 150)
-
-        # self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        # self.statusbar.setObjectName("statusbar")
-        # MainWindow.setStatusBar(self.statusbar)
-
-        # self.msgLabel = QtWidgets.QLabel()
-        # self.msgLabel.setMinimumSize(self.msgLabel.sizeHint())
-
-        # self.statusbar.addWidget(self.msgLabel)
-
-        self.shiqu = QtWidgets.QAction(MainWindow)
-        self.shiqu.setObjectName("shiqu")
-
-        self.shiquerji = QtWidgets.QAction(MainWindow)
-        self.shiquerji.setObjectName("shiquerji")
-
-        self.shiqujianbian = QtWidgets.QAction(MainWindow)
-        self.shiqujianbian.setObjectName("shiqujianbian")
-
-
-        self.zhuzhuang = QtWidgets.QAction(MainWindow)
-        self.zhuzhuang.setObjectName("zhuzhuang")
-
-        self.bingtu = QtWidgets.QAction(MainWindow)
-        self.bingtu.setObjectName("bingtu")
-
-        self.guojiajianbian = QtWidgets.QAction(MainWindow)
-        self.guojiajianbian.setObjectName("guojiajianbian")
-
-        self.fenbu = QtWidgets.QAction(MainWindow)
-        self.fenbu.setObjectName("fenbu")
-
-        self.shiqufenbu = QtWidgets.QAction(MainWindow)
-        self.shiqufenbu.setObjectName("shiqufenbu")
-
-        self.menu.addAction(self.shiqu)
-        self.menu.addAction(self.shiquerji)
-        self.menu.addAction(self.shiqujianbian)
-        self.menu_2.addAction(self.zhuzhuang)
-        self.menu_2.addAction(self.bingtu)
-        self.menu_2.addAction(self.guojiajianbian)
-        self.menu_3.addAction(self.fenbu)
-        self.menu_3.addAction(self.shiqufenbu)
-        self.menubar.addAction(self.menu.menuAction())
-        self.menubar.addAction(self.menu_2.menuAction())
-        self.menubar.addAction(self.menu_3.menuAction())
-
-        self.listWidget = QtWidgets.QListWidget(self.centralwidget)
-        self.listWidget.setGeometry(QtCore.QRect(1200, 80, 301, 501))
-        self.listWidget.setObjectName("listView")
-        self.listWidget.close()
-
-        self.retranslateUi(MainWindow)
-        self.search_k.clicked.connect(self.search_kfun)
-        self.shiqu.triggered.connect(self.shiqufun)
-        self.shiquerji.triggered.connect(self.shiquerjifun)
-        self.shiqujianbian.triggered.connect(self.shiqujianbianfun)
-        self.zhuzhuang.triggered.connect(self.zhuzhuangfun)
-        self.bingtu.triggered.connect(self.bingtufun)
-        self.guojiajianbian.triggered.connect(self.guojiajianbianfun)
-        self.fenbu.triggered.connect(self.fenbufun)
-        self.shiqufenbu.triggered.connect(self.shiqufenbufun)
-        self.time_analysis.clicked.connect(self.time_analysisfun)
-        self.search_r.clicked.connect(self.search_rfun)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-        vbox.addWidget(self.topk)
-        vbox.addWidget(self.topr)
-        vbox.addWidget(self.webwindow)
-
-        self.setLayout(vbox)
+        hbox_web.addWidget(self.webwindow)
+        self.web.setLayout(hbox_web)
 
     def search_kfun(self):
-        # input_attr = self.keyword.text().encode("utf-8")
-        input_attr = self.keyword.text().decode(encoding="utf-8")
+        input_attr = self.keyword.text()
         input_lon = float(self.input_lon.text())
         input_lat = float(self.input_lat.text())
         input_k = int(self.input_k.text())
 
         starbucks_df = read_data()
-        print(starbucks_df)
-
         start = time.time()
-        df_find = find_same(starbucks_df, self.keyword_text, input_attr)
+        df_find = find_same(starbucks_df, self.keyword_text.decode(encoding="utf-8"), input_attr)
         df_find = preprocessing(df_find)
 
         df_temp = topk(df_find, input_lon, input_lat, input_k)
         end = time.time()
         run_time = end-start
         self.statusBar().showMessage('查询时间为： '+str(run_time))
-        print(df_temp)
 
-        draw_map(df_temp, 'simtopk.html')
+        draw_map(df_temp, "simtopk.html")
 
         k_analysis = topk_k_analysis(df_find, input_lon, input_lat)
         bar_time = Bar("该经纬度下topk计算时间随k变化")
@@ -276,58 +285,54 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.listWidget.clear()
 
         for i in range(df_temp.shape[0]):
-             item = QListWidgetItem(df_temp['Store Name'][i])
+             item = QtWidgets.QListWidgetItem(df_temp['Store Name'][i])
              self.listWidget.addItem(item)
         self.listWidget.show()
-        # self.listWidget.update()
 
         self.listWidget.itemClicked['QListWidgetItem*'].connect(self.dia)
 
-        # self.msgLabel.setText("run time is: "+ run_time)
-
     def dia(self):
-        self.input_score.setEnabled(True)
+        self.countSpineBox.setEnabled(True)
         self.in_score.setEnabled(True)
         self.in_score.clicked.connect(self.pingfen)
 
     def pingfen(self):
-        score_var = int(self.input_score.text())
+        score_var = int(self.countSpineBox.text())
 
         starbucks_df = read_data()
-        print(score_var)
-        print(type(self.listWidget.currentItem().text()))
-        print(type(self.listWidget.currentItem().text().encode("utf-8")))
-        starbucks_df = input_score(starbucks_df,score_var,self.listWidget.currentItem().text().encode("utf-8"))
-        starbucks_df.to_csv('temp.csv',encoding="utf_8_sig", index=False)
+        starbucks_df = input_score(starbucks_df, score_var, self.listWidget.currentItem().text())
+        starbucks_df.to_csv('starbucks.csv', encoding="utf_8_sig", index=False)
 
 
     def keyword_onActivated(self, text):
         self.keyword_text = text.encode("utf-8")
 
     def search_rfun(self):
-        input_lon_r = float(self.input_lon_r.text())
-        input_lat_r = float(self.input_lat_r.text())
-        input_r = int(self.input_r.text())
+        lon_r_text = float(self.input_lon_r.text())
+        lat_r_text = float(self.input_lat_r.text())
+        r_text = int(self.input_r.text())
 
         starbucks_df = read_data()
-
         df_find = preprocessing(starbucks_df)
-        df_temp = r_cal(df_find, input_lon_r, input_lat_r, input_r)
+        df_temp = r_cal(df_find, lon_r_text, lat_r_text, r_text)
+        df_temp = df_temp.reset_index(drop=False)
+        draw_map(df_temp, "range.html")
 
-        draw_map(df_temp, 'range.html')
         path = os.getcwd()
         url = pathname2url(path)
         url = 'file:' + url + '/range.html'
+
         self.webwindow.load(QtCore.QUrl(url))
         self.webwindow.show()
         self.listWidget.clear()
 
         for i in range(df_temp.shape[0]):
-            item = QListWidgetItem(df_temp['Store Name'][i])
-            self.listWidget.addItem(item)
+             item = QtWidgets.QListWidgetItem(df_temp['Store Name'][i])
+             self.listWidget.addItem(item)
         self.listWidget.show()
 
         self.listWidget.itemClicked['QListWidgetItem*'].connect(self.dia)
+
 
     def time_analysisfun(self):
         path = os.getcwd()
@@ -337,18 +342,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.webwindow.show()
         self.listWidget.close()
 
-        # self.statusBar().showMessage('状态栏上显示的消息')
-
 
     def shiqufun(self):
         # 时区图
-        starbucks_df = read_data()
-
         path = os.getcwd()
         url = pathname2url(path)
         url = 'file:' + url + '/Amout_in_Each_Timezone_Pie.html'
         self.webwindow.load(QtCore.QUrl(url))
-        # self.setCentralWidget(self.webwindow)
         self.webwindow.show()
         self.listWidget.close()
 
@@ -367,7 +367,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         url = pathname2url(path)
         url = 'file:'+url+'/map_time.html'
         self.webwindow.load(QtCore.QUrl(url))
-        # self.setCentralWidget(self.webwindow)
         self.webwindow.show()
         self.listWidget.close()
 
@@ -386,15 +385,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         url = pathname2url(path)
         url = 'file:' + url + '/Amount_Each_Country_Pie.html'
         self.webwindow.load(QtCore.QUrl(url))
-        self.webwindow.show()
-        self.listWidget.close()
-
-    def guojiajianbianfun(self):
-        path = os.getcwd()
-        url = pathname2url(path)
-        url = 'file:' + url + '/distribution_map_country.html'
-        self.webwindow.load(QtCore.QUrl(url))
-        # self.setCentralWidget(self.webwindow)
         self.webwindow.show()
         self.listWidget.close()
 
@@ -418,51 +408,36 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.webwindow.show()
         self.listWidget.close()
 
+    def guojiajianbianfun(self):
+        path = os.getcwd()
+        url = pathname2url(path)
+        url = 'file:' + url + '/distribution_map_country.html'
+        self.webwindow.load(QtCore.QUrl(url))
+        self.webwindow.show()
+        self.listWidget.close()
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.label_3.setText(_translate("MainWindow", "显示结果数："))
-        self.label.setText(_translate("MainWindow", "经度："))
-        self.label_2.setText(_translate("MainWindow", "纬度："))
+        self.label_k.setText(_translate("MainWindow", "结果数:"))
+        self.label_lonk.setText(_translate("MainWindow", "经度:"))
+        self.label_latk.setText(_translate("MainWindow", "纬度:"))
         self.search_k.setText(_translate("MainWindow", "查询"))
-        self.label_9.setText(_translate("MainWindow", "关键词检索"))
         self.time_analysis.setText(_translate("MainWindow", "查询时间分析"))
-        self.label_11.setText(_translate("MainWindow", "经度："))
-        self.label_12.setText(_translate("MainWindow", "纬度："))
+        self.label_lonr.setText(_translate("MainWindow", "经度:"))
+        self.label_latr.setText(_translate("MainWindow", "纬度:"))
         self.search_r.setText(_translate("MainWindow", "查询"))
-        self.label_13.setText(_translate("MainWindow", "查询距离范围(米)："))
-        self.label_14.setText(_translate("MainWindow", "距离范围检索"))
-        self.label_15.setText(_translate("MainWindow", "输入分数(1-10):"))
+        self.rsearch.setText(_translate("MainWindow", "距离范围(米):"))
+        self.label_score.setText(_translate("MainWindow", "输入分数(1-10):"))
         self.in_score.setText(_translate("MainWindow", "评分"))
         self.menu.setTitle(_translate("MainWindow", "按时区数据统计"))
         self.menu_2.setTitle(_translate("MainWindow", "按国家数据统计"))
         self.menu_3.setTitle(_translate("MainWindow", "分布地图"))
         self.shiqu.setText(_translate("MainWindow", "各时区店铺数量统计饼图"))
         self.shiquerji.setText(_translate("MainWindow", "各时区店铺数量统计饼图（详细）"))
-        self.shiqujianbian.setText(_translate("MainWindow", "各时区店铺数量渐变图"))
         self.zhuzhuang.setText(_translate("MainWindow", "柱状图"))
         self.bingtu.setText(_translate("MainWindow", "饼图"))
         self.guojiajianbian.setText(_translate("MainWindow", "各国家店铺数量渐变图"))
         self.fenbu.setText(_translate("MainWindow", "店铺分布图"))
         self.shiqufenbu.setText(_translate("MainWindow", "时区店铺分布图"))
-
-"""
-if __name__ == '__main__':
-
-    app = QtWidgets.QApplication(sys.argv)
-    #widget = QtWidgets.QWidget()
-    #MainWindow = QMainWindow()
-    # ui = Ui_MainWindow()
-    # ui.setupUi(MainWindow)
-    MainWindow = Ui_MainWindow()
-    MainWindow.setupUi(MainWindow)
-    # url = "https://www.baidu.com"
-    # MainWindow.load1()
-
-    MainWindow.show()
-   # QWebView.load(MainWindow,url)
-
-
-
-    sys.exit(app.exec_())"""
